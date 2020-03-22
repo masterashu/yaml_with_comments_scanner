@@ -1,29 +1,39 @@
-A parser for [YAML](http://www.yaml.org/).
-
-[![Pub Package](https://img.shields.io/pub/v/yaml.svg)](https://pub.dev/packages/yaml)
-[![Build Status](https://travis-ci.org/dart-lang/yaml.svg?branch=master)](https://travis-ci.org/dart-lang/yaml)
-
-Use `loadYaml` to load a single document, or `loadYamlStream` to load a
-stream of documents. For example:
-
+Example Code:
 ```dart
-import 'package:yaml/yaml.dart';
+import 'package:yaml/src/scanner.dart';
+import 'package:yaml/src/token.dart';
 
-main() {
-  var doc = loadYaml("YAML: YAML Ain't Markup Language");
-  print(doc['YAML']);
+void main() {
+  var scanner = Scanner('''
+    - Item 4 #co1
+    #comment
+    - This is a sequence #co4
+    #co2
+      #co3
+    - inside another sequence
+  ''');
+
+  while (scanner.peek().type != TokenType.streamEnd) {
+    print(scanner.scan());
+  }
+  print(scanner.scan());
 }
 ```
-
-This library currently doesn't support dumping to YAML. You should use
-`json.encode` from `dart:convert` instead:
-
-```dart
-import 'dart:convert';
-import 'package:yaml/yaml.dart';
-
-main() {
-  var doc = loadYaml("YAML: YAML Ain't Markup Language");
-  print(json.encode(doc));
-}
+Output:
+```
+TokenType.streamStart
+TokenType.blockSequenceStart
+TokenType.blockEntry
+SCALAR PLAIN "Item 4"
+COMMENT INLINE "co1"
+COMMENT NEWLINE "comment"
+TokenType.blockEntry
+SCALAR PLAIN "This is a sequence"
+COMMENT INLINE "co4"
+COMMENT NEWLINE "co2"
+COMMENT NEWLINE "co3"
+TokenType.blockEntry
+SCALAR PLAIN "inside another sequence"
+TokenType.blockEnd
+TokenType.streamEnd
 ```
