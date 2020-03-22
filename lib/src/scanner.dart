@@ -800,7 +800,7 @@ class Scanner {
       }
 
       // Eat a comment until a line break.
-      _skipComment();
+      _skipComment(newLine: afterLineBreak);
 
       // If we're at a line break, eat it.
       if (_isBreak) {
@@ -1620,11 +1620,25 @@ class Scanner {
   }
 
   /// Moves the scanner past a comment, if one starts at the current position.
-  void _skipComment() {
+  void _skipComment({bool newLine = false}) {
     if (_scanner.peekChar() != HASH) return;
-    while (!_isBreakOrEnd) {
+    _tokens.add(_scanComment(newLine));
+  }
+
+  Token _scanComment(bool newLine) {
+    var start = _scanner.state;
+    var end = _scanner.state;
+    var buffer = StringBuffer();
+    if (_scanner.peekChar() == HASH) {
       _scanner.readChar();
     }
+    while (!_isBreakOrEnd) {
+      var ch = _scanner.readChar();
+      buffer.writeCharCode(ch);
+    }
+    end = _scanner.state;
+    return CommentToken(_scanner.spanFrom(start, end), buffer.toString(),
+        newLine: newLine);
   }
 }
 
